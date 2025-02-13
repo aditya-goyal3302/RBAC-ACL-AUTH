@@ -1,0 +1,40 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: complaints-service
+  namespace: quality-{BUILD_ENV}
+  labels:
+    app: complaints-service
+spec:
+  backoffLimit: 5
+  activeDeadlineSeconds: 100
+  template:
+    metadata:
+      labels:
+        app: complaints-service
+    spec:
+      containers:
+        - name: complaints-service
+          image: localhost:32000/image:latest
+          imagePullPolicy: Always
+          command:
+            - npm
+            - run
+            - up
+      restartPolicy: Never
+#          volumeMounts:
+#            - name: storage-secrets
+#              mountPath: /app/storage/secrets
+#              readOnly: true
+#      volumes:
+#        - name: storage-secrets
+#          secret:
+#            secretName: storage-secrets
+
+#view: microk8s.kubectl get deployment/complaints-service -n quality-{BUILD_ENV}
+#bash: microk8s.kubectl exec -it deployment/complaints-service --namespace quality-{BUILD_ENV} -- bash
+#http: microk8s.kubectl port-forward deployment/complaints-service -n quality-{BUILD_ENV} 8080:8080
+#restart: microk8s.kubectl rollout restart deployment/complaints-service  -n quality-{BUILD_ENV}
+#delete: microk8s.kubectl delete deployment/complaints-service  -n quality-{BUILD_ENV}
+#destroy-all: microk8s.kubectl delete --all deployments --namespace quality-{BUILD_ENV}
+#https://io/docs/registry-private

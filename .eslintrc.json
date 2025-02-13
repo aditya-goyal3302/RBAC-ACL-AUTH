@@ -1,0 +1,36 @@
+{
+    "env": {
+        "node": true,
+        "commonjs": true,
+        "es2021": true
+    },
+    "plugins": [
+        "snakecasejs"
+    ],
+    "settings":
+    {
+        "snakecasejs/filter": ["NewExpression"],
+        "snakecasejs/whitelist": ["externalPath", "setNumber", "NewPageClass", ""]
+    },
+    "extends": "eslint:recommended",
+    "parserOptions": {
+        "ecmaVersion": "latest"
+    },
+    "rules": {
+        "semi": [1, "always"],
+        "one-var": [0],
+        "no-unused-vars": "warn",
+        "prefer-const": [0]
+    },
+    "globals": {
+        "process": "readonly"
+    },
+    "overrides": [
+        {
+          "files": ["**/*.js"], // Adjust this pattern to match your JavaScript files.
+          "rules": {
+            "snakecasejs/property-case": "off"
+          }
+        }
+      ]
+}

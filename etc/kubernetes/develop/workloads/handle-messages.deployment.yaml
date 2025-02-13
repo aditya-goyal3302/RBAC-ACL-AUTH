@@ -1,0 +1,40 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: complaints-messages-handler
+  name: complaints-messages-handler-deployment
+  namespace: {_NAMESPACE}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: complaints-messages-handler
+  strategy:
+    rollingUpdate:
+      maxSurge: 25%
+      maxUnavailable: 25%
+    type: RollingUpdate
+  template:
+    metadata:
+      labels:
+        app: complaints-messages-handler
+        namespace: {_NAMESPACE}
+    spec:
+      containers:
+        - name: complaints-messages-handler-container
+          image: {_IMAGE}
+          imagePullPolicy: Always
+          command:
+            - "/bin/sh"
+            - -c
+            - "npm run handle-messages -- --limit 10"
+          resources:
+            requests:
+              cpu: "250m"
+              memory: "512Mi"
+            limits:
+              cpu: "250m"
+              memory: "512Mi"
+            
+

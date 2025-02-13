@@ -1,0 +1,25 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: complaints-service-ingress
+  namespace: quality-{BUILD_ENV}
+  annotations:
+    kubernetes.io/ingress.class: "public"
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/rewrite-target: /$2
+spec:
+  tls:
+    - hosts:
+        - quality.ctdesarrollo.org
+      secretName: wildcard-ctdesarrollo-es
+  rules:
+    - host: quality.ctdesarrollo.org
+      http:
+        paths:
+          - path: /complaints-service-{BUILD_ENV}(/|$)(.*)
+            pathType: Prefix
+            backend:
+              service:
+                name: complaints-service
+                port:
+                  number: 8080

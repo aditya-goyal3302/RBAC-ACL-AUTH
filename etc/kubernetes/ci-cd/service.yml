@@ -1,0 +1,21 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: complaints-service
+  namespace: quality-{BUILD_ENV}
+  labels:
+    app: complaints-service
+
+spec:
+  type: LoadBalancer
+  selector:
+    app: complaints-service
+  sessionAffinity: None
+  ports:
+    - name: http
+      protocol: TCP
+      port: 8080
+      targetPort: 8080
+      #nodePort: 32080
+
+#http: microk8s.kubectl port-forward service/complaints-service-service -n quality-{BUILD_ENV} 80:8080 --address '0.0.0.0'

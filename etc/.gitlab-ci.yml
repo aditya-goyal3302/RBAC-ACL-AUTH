@@ -1,0 +1,225 @@
+#https://medium.com/linkbynet/code-quality-test-with-sonarqube-and-gitlab-ci-for-php-applications-f0c953f4133d
+#https://medium.com/@vitalypanukhin/docker-compose-and-gitlab-b209d09210f6
+#https://docs.sonarqube.org/latest/analyzing-source-code/analysis-parameters/
+#https://dev.to/muhamadhhassan/adding-phpunit-test-log-and-coverage-to-gitlab-cicd-33b5
+
+# Use the official docker image.
+image: docker:latest
+services:
+  - name: docker:dind
+    command:
+      - "--insecure-registry"
+      - "quality.ctdesarrollo.org:32000"
+
+variables:
+  CONTAINER_IMAGE: "${CONTAINER_REGISTRY}/quality/complaints:${CI_COMMIT_SHORT_SHA}"
+  RELEASE_BRANCH: /^release\/\d+.\d+.\d+$/
+  HOTFIX_BRANCH: /^hotfix\/.*/
+
+stages:
+  - build
+  # - test
+  - deploy
+
+#develop pipelines
+#docker-build-develop:
+#  stage: build
+#  #set the BUILD_ENV
+#  before_script:
+#    - BUILD_ENV=develop
+#  script:
+#    - apk add bash #install bash to support all the ci-cd scripts
+#    - ./etc/ci-cd/build.sh .
+#  tags:
+#    - microk8s
+#    - integration-server
+#     
+#  only:
+#    refs:
+#      - develop
+#
+##https://microk8s.io/docs/registry-private
+#kubernetes-develop:
+#  stage: deploy
+#  image:
+#    name: bitnami/kubectl:latest
+#    entrypoint:
+#      - ''
+#  dependencies:
+#    - docker-build-develop
+#  #set the BUILD_ENV
+#  before_script:
+#    - BUILD_ENV=develop
+#  script:
+#    - 'echo "${KUBE_CONFIG}" > /.kube/config'
+#    - ./etc/ci-cd/deploy.kubectl.sh .
+#  tags:
+#    - microk8s
+#    - integration-server
+#     
+#  only:
+#    refs:
+#      - develop
+
+#releases pipelines
+#install dependencies, decrypt the test .env file
+docker-build-release:
+  stage: build
+  #set the BUILD_ENV
+  before_script:
+    - BUILD_ENV=release
+  script:
+    - apk add bash #install bash to support all the ci-cd scripts
+    - ./etc/ci-cd/build.sh .
+  tags:
+    - microk8s
+    - integration-server
+     
+  rules:
+    - if: ($CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "main" && $CI_MERGE_REQUEST_SOURCE_BRANCH_NAME =~ $RELEASE_BRANCH)
+
+#test the application
+# tests:
+#   stage: test
+#   script:
+#     - ./etc/ci-cd/test.sh .
+#   after_script:
+#     - ./etc/ci-cd/after-test.sh .
+#   artifacts:
+#     paths:
+#       - storage/tests/results.xml
+#       - storage/tests/coverage.xml
+#       - storage/tests/cobertura.xml
+#     reports:
+#       junit: storage/tests/results.xml
+#       coverage_report:
+#         coverage_format: cobertura
+#         path: storage/tests/cobertura.xml
+#     expire_in: 1h
+#   tags:
+#     - microk8s
+#     - integration-server
+#      
+#   rules:
+#     - if: ($CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "main" && $CI_MERGE_REQUEST_SOURCE_BRANCH_NAME =~ $RELEASE_BRANCH && $CI_JOB_STAGE == "disabled")
+#     - if: ($CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "main" && $CI_MERGE_REQUEST_SOURCE_BRANCH_NAME =~ $HOTFIX_BRANCH && $CI_JOB_STAGE == "disabled")
+
+#qc analysis for hotfixes and release branches
+# sonarqube:
+#   stage: deploy
+#   image:
+#     name: sonarsource/sonar-scanner-cli:latest
+#     entrypoint: [ "" ]
+#   variables:
+#     SONAR_HOST_URL: ${SONAR_HOST_URL}
+#     SONAR_TOKEN: ${SONAR_TOKEN}
+#     GIT_DEPTH: "0"
+#   # noinspection SpellCheckingInspection
+#   script:
+#     - sonar-scanner -Dsonar.qualitygate.wait=true
+#   tags:
+#     - microk8s
+#     - integration-server
+#      
+#   rules:
+#     - if: ($CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "main" && $CI_MERGE_REQUEST_SOURCE_BRANCH_NAME =~ $RELEASE_BRANCH)
+#     - if: ($CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "main" && $CI_MERGE_REQUEST_SOURCE_BRANCH_NAME =~ $HOTFIX_BRANCH)
+
+#https://microk8s.io/docs/registry-private
+kubernetes-release:
+  stage: deploy
+  image:
+    name: bitnami/kubectl:latest
+    entrypoint:
+      - ''
+  dependencies:
+    - docker-build-release
+  before_script:
+    - BUILD_ENV=release
+  script:
+    - 'echo "${KUBE_CONFIG}" > /.kube/config'
+    - ./etc/ci-cd/deploy.kubectl.sh .
+  tags:
+    - microk8s
+    - integration-server
+     
+  rules:
+    - if: ($CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "main" && $CI_MERGE_REQUEST_SOURCE_BRANCH_NAME =~ $RELEASE_BRANCH)
+
+#releases pipelines
+#install dependencies, decrypt the test .env file
+docker-build-hotfix:
+  stage: build
+  #set the BUILD_ENV
+  before_script:
+    - BUILD_ENV=main
+  script:
+    - apk add bash #install bash to support all the ci-cd scripts
+    - ./etc/ci-cd/build.sh .
+  tags:
+    - microk8s
+    - integration-server
+     
+  rules:
+    - if: ($CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "main" && $CI_MERGE_REQUEST_SOURCE_BRANCH_NAME =~ $HOTFIX_BRANCH)
+
+#https://microk8s.io/docs/registry-private
+kubernetes-hotfix:
+  stage: deploy
+  image:
+    name: bitnami/kubectl:latest
+    entrypoint:
+      - ''
+  dependencies:
+    - docker-build-hotfix
+  before_script:
+    - BUILD_ENV=main
+  script:
+    - 'echo "${KUBE_CONFIG}" > /.kube/config'
+    - ./etc/ci-cd/deploy.kubectl.sh .
+  tags:
+    - microk8s
+    - integration-server
+     
+  rules:
+    - if: ($CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "main" && $CI_MERGE_REQUEST_SOURCE_BRANCH_NAME =~ $HOTFIX_BRANCH)
+
+#main pipelines
+docker-build-main:
+  stage: build
+  script:
+    - apk add bash #install bash to support all the ci-cd scripts
+    - ./etc/ci-cd/build.sh .
+  #set the BUILD_ENV
+  before_script:
+    - BUILD_ENV=main
+  tags:
+    - microk8s
+    - integration-server
+     
+  only:
+    refs:
+      - main
+
+#https://microk8s.io/docs/registry-private
+kubernetes-main:
+  stage: deploy
+  image:
+    name: bitnami/kubectl:latest
+    entrypoint:
+      - ''
+  dependencies:
+    - docker-build-main
+  #set the BUILD_ENV
+  before_script:
+    - BUILD_ENV=main
+  script:
+    - 'echo "${KUBE_CONFIG}" > /.kube/config'
+    - ./etc/ci-cd/deploy.kubectl.sh .
+  tags:
+    - microk8s
+    - integration-server
+     
+  only:
+    refs:
+      - main

@@ -1,0 +1,65 @@
+steps:
+  - id: 'Decrypt secrets'
+    name: docker.io/kytel0925/ci-cd
+    args: [
+      './etc/ci-cd/decrypt-secrets.cloud-build.sh',
+      '.'
+    ]
+    env:
+      - APP_PATH=/workspace
+      - BUILD_ENV=production
+      - BUILD_KEY=$_BUILD_KEY
+
+  - id: 'Building'
+    name: 'gcr.io/cloud-builders/docker'
+    args: [
+      'build',
+      '-t',
+      '${_IMAGE_SHA}',
+      '-t',
+      '${_IMAGE_LATEST}',
+      '.'
+    ]
+
+  - id: 'Pushing'
+    name: 'gcr.io/cloud-builders/docker'
+    args: [
+      'push',
+      '${_IMAGE}',
+      '--all-tags'
+    ]
+
+  - id: 'Deploying'
+    name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    entrypoint: gcloud
+    args:
+      - 'run'
+      - 'deploy'
+      - 'complaints-production'
+      - '--image'
+      - '${_IMAGE_SHA}'
+      - '--region'
+      - 'europe-west1'
+
+options:
+  logging: CLOUD_LOGGING_ONLY
+  dynamic_substitutions: true
+  #machineType: 'E2_HIGHCPU_8'
+
+# Images
+images:
+  - '${_IMAGE_SHA}'
+  - '${_IMAGE_LATEST}'
+
+substitutions:
+  _IMAGE: 'europe-southwest1-docker.pkg.dev/quality-main/complaints-project/complaints-service'
+  _IMAGE_SHA: '${_IMAGE}:${SHORT_SHA}'
+  _IMAGE_LATEST: '${_IMAGE}:latest'
+
+# Tags
+tags:
+  - production
+  - quality
+  - complaints
+
+#cli-test: gcloud production builds submit --config etc/gCloud/production.cloud-run.yaml --substitutions=SHORT_SHA="production-test-1",_BUILD_KEY="key"

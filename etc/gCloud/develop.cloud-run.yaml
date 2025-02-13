@@ -1,0 +1,102 @@
+steps:
+  - id: 'Decrypt secrets'
+    name: docker.io/kytel0925/ci-cd
+    entrypoint: 'bash'
+    args:
+      - '-c'
+      - |
+        sed -i 's/\r$//' ./etc/ci-cd/decrypt-secrets.cloud-build.sh
+        chmod +x ./etc/ci-cd/decrypt-secrets.cloud-build.sh
+        ./etc/ci-cd/decrypt-secrets.cloud-build.sh .
+    env:
+      - APP_PATH=/workspace
+      - BUILD_ENV=develop
+      - BUILD_KEY=$_BUILD_KEY
+
+  - id: 'Building'
+    name: 'gcr.io/cloud-builders/docker'
+    args: [
+      'build',
+      '-t',
+      '${_IMAGE_SHA}',
+      '-t',
+      '${_IMAGE_LATEST}',
+      '.'
+    ]
+
+  - id: 'Pushing'
+    name: 'gcr.io/cloud-builders/docker'
+    args: [
+      'push',
+      '${_IMAGE}',
+      '--all-tags'
+    ]
+
+  - id: 'Deploying'
+    name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    entrypoint: gcloud
+    args:
+      - 'run'
+      - 'deploy'
+      - '${_DOCKER_IMAGE_NAME}'
+      - '--image'
+      - '${_IMAGE_SHA}'
+      - '--region'
+      - 'us-central1'
+
+  - id: 'Update image & namespace tag'
+    name: debian:11-slim
+    args: [
+      'bash',
+      '-c',
+      'find ./etc/kubernetes/develop -type f -name "*.yaml" -exec sed -i -e "s,{_IMAGE},${_IMAGE_SHA},g" -e "s,{_NAMESPACE},${_NAMESPACE},g" {} +'
+    ]
+
+  - id: 'Deploying kubernetes configuration'
+    name: gcr.io/cloud-builders/kubectl
+    args: [
+      'apply',
+      '-f',
+      './etc/kubernetes/develop/namespace.yaml'
+    ]
+    env:
+      - 'CLOUDSDK_COMPUTE_ZONE=${_CLOUDSDK_COMPUTE_ZONE}'
+      - 'CLOUDSDK_CONTAINER_CLUSTER=${_CLOUDSDK_CONTAINER_CLUSTER}'
+  
+  - id: 'Deploying kubernetes app'
+    name: gcr.io/cloud-builders/kubectl
+    args: [
+      'apply',
+      '-f',
+      './etc/kubernetes/develop/workloads/dispatch-messages.cronjob.yaml',
+      '-f',
+      './etc/kubernetes/develop/workloads/handle-messages.deployment.yaml'
+    ]
+    env:
+      - 'CLOUDSDK_COMPUTE_ZONE=${_CLOUDSDK_COMPUTE_ZONE}'
+      - 'CLOUDSDK_CONTAINER_CLUSTER=${_CLOUDSDK_CONTAINER_CLUSTER}'
+
+
+options:
+  logging: CLOUD_LOGGING_ONLY
+  dynamic_substitutions: true
+  # machineType: 'E2_HIGHCPU_8'
+
+# Images
+images:
+  - '${_IMAGE_SHA}'
+  - '${_IMAGE_LATEST}'
+
+substitutions:
+  _NAMESPACE: team-four-develop
+  _IMAGE: '${_ARTIFACT_REGISTRY_LOCATION}/${PROJECT_ID}/${_ARTIFACT_REGISTRY_REPOSITORY}/${_DOCKER_IMAGE_NAME}'
+  _IMAGE_SHA: '${_IMAGE}:${SHORT_SHA}'
+  _IMAGE_LATEST: '${_IMAGE}:latest-develop'
+
+# Tags
+tags:
+  - develop
+  - quality
+  - complaints-service
+
+#cli-test: gcloud beta builds submit --config etc/gCloud/beta.cloud-run.yaml --substitutions=SHORT_SHA="beta-test-1",_BUILD_KEY="key"
