@@ -12,6 +12,15 @@ module.exports = (sequelize, DataTypes) => {
     toJSON() {
       return this.get();
     }
+
+    static associate(models) {
+
+      this.belongsTo(models.UserRole, {
+        foreignKey: "role_id",
+        as: "user",
+      });
+
+    }
   }
   User.init(
     {
@@ -46,6 +55,10 @@ module.exports = (sequelize, DataTypes) => {
         validate: {
           notEmpty: true,
         },
+      },
+      role_id: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
       },
       status: {
         type: DataTypes.ENUM(...userStatus.getValues()),

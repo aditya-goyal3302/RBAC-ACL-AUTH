@@ -1,18 +1,13 @@
 const { BadRequest } = require("../libs/error");
 const BaseRepository = require("./base-repository");
-const { User, Acl } = require("../models");
+const { User } = require("../models");
 const { userStatus } = require("../models/user/user-status");
 
 class UserRepository extends BaseRepository {
   constructor() {
     super({ model: User });
   }
-  include = [
-    // {
-    //   model: Acl,
-    //   as: "role_data",
-    // },
-  ];
+
   async findUser({ criteria, options }) {
     const resp = await this.findOne({
       criteria,

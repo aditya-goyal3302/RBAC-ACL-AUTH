@@ -32,6 +32,10 @@ module.exports = {
         allowNull: false,
         unique: true,
       },
+      role_id: {
+        type: Sequelize.INTEGER,
+        allowNull: false,
+      },
       status: {
         type: Sequelize.ENUM(userStatus.getValues()),
         allowNull: false,

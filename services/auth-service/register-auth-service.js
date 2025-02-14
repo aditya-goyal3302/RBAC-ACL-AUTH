@@ -4,7 +4,16 @@ const AuthService = require("./auth-service");
 const email_regex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
 
 class RegisterService extends AuthService {
-  _execute = async ({ name, username, email, password, phone_no }) => {
+
+  constructor({ user_repository, user_role_repository }) {
+    super({
+      user_repository
+    });
+
+    this.user_role_repository = user_role_repository;
+  }
+
+  _execute = async ({ name, username, email, password, phone_no, user_role }) => {
     const response = await this.user_repository.handleManagedTransaction(async (transaction) => {
       if (!name || name.length < 6) throw new BadRequest("Name is invalid");
       if (!email || !email_regex.test(email)) throw new BadRequest("Email Required");
@@ -21,7 +30,16 @@ class RegisterService extends AuthService {
       if (is_existing_username) throw new Conflict("Username Already Exists!");
 
       return await this.user_repository.create({
-        payload: { status: userStatus.ENUM.ACTIVE, name, username, email, password, phone_no, is_two_step_verification_enabled: true },
+        payload: { 
+          status: userStatus.ENUM.ACTIVE, 
+          name, 
+          username, 
+          email, 
+          password, 
+          phone_no, 
+          is_two_step_verification_enabled: false ,
+          role_id: await this.user_role_repository.getId(user_role),
+        },
         options: { transaction },
       });
     });

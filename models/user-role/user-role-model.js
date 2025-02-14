@@ -5,12 +5,7 @@ module.exports = (sequelize, DataTypes) => {
   class UserRole extends Model {
     static associate(models) {
 
-      this.belongsTo(models.User, {
-        foreignKey: "role_id",
-        as: "user",        
-      });
-
-      models.User.hasOne(this, {
+      this.hasMany(models.User, {
         foreignKey: "role_id",
         as: "user_role",
       });
@@ -30,7 +25,7 @@ module.exports = (sequelize, DataTypes) => {
         defaultValue: DataTypes.UUIDV4,
         allowNull: false,
       },
-      title:{
+      title: {
         type: DataTypes.STRING,
         allowNull: false,
       },

@@ -1,5 +1,6 @@
 require("dotenv").config();
 const { createContainer, asClass, asValue } = require("awilix");
+const { check_connection } = require("./config/db-connection");
 
 class Server {
   constructor({ root_router, error_middleware, parsers, app, cors }) {
@@ -18,8 +19,9 @@ class Server {
     this.app.use(...this.parsers.static_path());
     this.app.use(this.cors.cors);
   };
-
-  setup_routes = () => {
+  
+  setup_routes = async () => {
+    await check_connection()
     this.app.use(this.root_router.router);
   };
 
@@ -31,7 +33,12 @@ class Server {
 
   run_engine = async () => this.app.listen(
     process.env.APP_PORT,
-    () => console.log(`\nEngine running \nOn port ${process.env.APP_PORT}`)
+    async () => {
+      this.setup_middlewares();
+      await this.setup_routes();
+      this.setup_error_handlers();
+      console.log(`Engine running \nOn port ${process.env.APP_PORT}`)
+    }
   );
 
 }
