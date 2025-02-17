@@ -17,7 +17,7 @@ module.exports = (sequelize, DataTypes) => {
 
       this.belongsTo(models.UserRole, {
         foreignKey: "role_id",
-        as: "user",
+        as: "user_role",
       });
 
     }

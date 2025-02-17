@@ -2,14 +2,14 @@
 const { Model } = require("sequelize");
 
 module.exports = (sequelize, DataTypes) => {
-  class UserAcl extends Model {
+  class UserRoleAccess extends Model {
     static associate(models) {
 
       this.belongsTo(models.UserRole, {
         foreignKey: "user_role_id",
         as: "user_role",
       });
-      
+
       this.belongsTo(models.Acl, {
         foreignKey: "access_id",
         as: "access",
@@ -19,21 +19,28 @@ module.exports = (sequelize, DataTypes) => {
         foreignKey: "user_role_id",
         as: "user_role_access",
       });
-      
+
       models.Acl.hasMany(this, {
         foreignKey: "access_id",
         as: "access_for_user_roles",
       });
 
       models.UserRole.belongsToMany(models.Acl, {
-        through: this, 
-        foreignKey: "user_role_id", 
+        through: {
+          model: this,
+          attribute: []
+        },
+        foreignKey: "user_role_id",
         otherKey: "access_id",
-        as: "user_access", 
+        as: "user_access",
+
       });
 
       models.Acl.belongsToMany(models.UserRole, {
-        through: this,
+        through: {
+          model: this,
+          attribute: []
+        },
         foreignKey: "access_id",
         otherKey: "user_role_id",
         as: "accesses_for_user_roles",
@@ -42,7 +49,7 @@ module.exports = (sequelize, DataTypes) => {
     }
   }
 
-  UserAcl.init(
+  UserRoleAccess.init(
     {
       id: {
         type: DataTypes.INTEGER,
@@ -80,5 +87,5 @@ module.exports = (sequelize, DataTypes) => {
       tableName: "user_role_access",
     }
   );
-  return UserAcl;
+  return UserRoleAccess;
 };

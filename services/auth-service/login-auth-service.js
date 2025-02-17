@@ -7,7 +7,7 @@ class LoginService extends AuthService {
     super({ user_repository });
     this.send_one_time_verification_code_service = send_one_time_verification_code_service;
   }
-  
+
   _execute = async ({ email, password }) => {
     return await this.user_repository.handleManagedTransaction(async (transaction) => {
       if (!email) throw new BadRequest("Email Required");
@@ -18,12 +18,15 @@ class LoginService extends AuthService {
         options: { transaction },
       });
 
-      if (user.status !== userStatus.ENUM.ACTIVE) throw new BadRequest("User Blocked");
+      if (user.status !== userStatus.ENUM.ACTIVE)
+        throw new BadRequest("User Blocked");
 
       if (user.is_two_step_verification_enabled)
         return await this.send_one_time_verification_code_service.handle({ email, purpose: "login", user, transaction });
 
-      else return this.gen_response_with_token(user);
+      else
+        return this.gen_response_with_token(user);
+
     });
   };
 }

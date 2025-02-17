@@ -25,6 +25,10 @@ module.exports = {
         type: Sequelize.ENUM(...aclMethods.getValues()),
         allowNull: false,
       },
+      title: {
+        type: Sequelize.STRING,
+        allowNull: false,
+      },
       created_at: {
         allowNull: false,
         type: Sequelize.DATE,

@@ -19,9 +19,8 @@ class Server {
     this.app.use(...this.parsers.static_path());
     this.app.use(this.cors.cors);
   };
-  
-  setup_routes = async () => {
-    await check_connection()
+
+  setup_routes = () => {
     this.app.use(this.root_router.router);
   };
 
@@ -31,15 +30,21 @@ class Server {
     this.error_middleware.handle_uncaught_error();
   };
 
-  run_engine = async () => this.app.listen(
-    process.env.APP_PORT,
-    async () => {
+  run_engine = async () => {
+    try {
       this.setup_middlewares();
-      await this.setup_routes();
+      this.setup_routes();
       this.setup_error_handlers();
-      console.log(`Engine running \nOn port ${process.env.APP_PORT}`)
+      await check_connection();
+      this.app.listen(
+        process.env.APP_PORT,
+        async () => console.log(`Engine running \nOn port ${process.env.APP_PORT}`)
+      );
+    } catch (error) {
+      console.error("App startup failed due to: ",error);
+      process.exit(1);
     }
-  );
+  }
 
 }
 const container = createContainer();

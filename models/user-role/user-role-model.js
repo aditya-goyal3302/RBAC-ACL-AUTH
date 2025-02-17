@@ -7,9 +7,8 @@ module.exports = (sequelize, DataTypes) => {
 
       this.hasMany(models.User, {
         foreignKey: "role_id",
-        as: "user_role",
+        as: "users",
       });
-
     }
   }
 

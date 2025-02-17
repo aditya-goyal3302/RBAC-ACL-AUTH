@@ -1,6 +1,6 @@
 const { BadRequest } = require("../libs/error");
 const BaseRepository = require("./base-repository");
-const { User } = require("../models");
+const { User, UserRole, UserRoleAccess, Acl } = require("../models");
 const { userStatus } = require("../models/user/user-status");
 
 class UserRepository extends BaseRepository {
@@ -8,13 +8,38 @@ class UserRepository extends BaseRepository {
     super({ model: User });
   }
 
+  include_access = [
+    {
+      model: UserRole,
+      as: "user_role",
+      attributes: { exclude: ["id", "uuid", "created_at", "updated_at"] },
+      include: [
+        {
+          model: Acl,
+          as: "user_access",
+          attributes: { exclude: ["id", "uuid", "created_at", "updated_at"] },
+        }
+      ],
+    }
+  ];
+
   async findUser({ criteria, options }) {
     const resp = await this.findOne({
       criteria,
-      options: { attributes: { exclude: ["password", "id"] }, ...options },
+      options: { attributes: { exclude: ["password", "id", "role_id"] }, ...options },
       include: this.include,
     });
     return resp.toJSON();
+  }
+
+  async findUserWithAccess({ criteria, options }) {
+    const resp = await this.findOne({
+      criteria,
+      options: { attributes: { exclude: ["password", "id", "role_id"] }, ...options },
+      include: this.include_access
+    });
+    return resp.toJSON();
+
   }
 
   async findAllUser({ order = "DESC", limit, offset }) {

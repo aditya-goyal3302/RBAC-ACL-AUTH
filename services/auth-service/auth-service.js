@@ -8,7 +8,7 @@ class AuthService extends BaseService {
   }
 
   gen_response_with_token = async (userData) => {
-    const user = await this.user_repository.findUser({ criteria: { uuid: userData.uuid } });
+    const user = await this.user_repository.findUserWithAccess({ criteria: { uuid: userData.uuid } });
     const data = {
       ...user,
       password: undefined,
