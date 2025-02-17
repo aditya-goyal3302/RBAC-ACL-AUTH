@@ -1,6 +1,7 @@
 const { BadRequest } = require("../../libs/error");
 const VerificationService = require("./verification-service");
 const { userStatus } = require("../../models/user/user-status");
+const { User } = require("../../models");
 
 module.exports = class ValidateOneTimeVerificationCodeService extends VerificationService {
   _execute = async ({ email, otp, purpose, transaction }) => {

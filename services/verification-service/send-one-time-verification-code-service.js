@@ -20,14 +20,14 @@ module.exports = class SendOneTimeVerificationCodeService extends VerificationSe
       },
       options: { transaction },
     });
-    // await    outbox           // EDA coming soon
+
     const message = {
       email,
       otp,
       purpose,
       template: "OTP",
     };
-    await this.outbox_message_repository.storeOutboxMessage({
+    await this.outbox_message_repository.store_outbox_message({
       outbox_message: new SendVerificationCodeEvent(message),
       transaction,
     });

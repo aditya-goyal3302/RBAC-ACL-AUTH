@@ -38,7 +38,7 @@ class Server {
       await check_connection();
       this.app.listen(
         process.env.APP_PORT,
-        async () => console.log(`Engine running \nOn port ${process.env.APP_PORT}`)
+        () => console.log(`Engine running \nOn port ${process.env.APP_PORT}`)
       );
     } catch (error) {
       console.error("App startup failed due to: ",error);

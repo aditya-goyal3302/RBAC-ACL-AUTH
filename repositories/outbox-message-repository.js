@@ -6,7 +6,7 @@ class OutboxMessageRepository extends BaseRepository {
   constructor() {
     super({ model: db["OutboxMessage"] });
   }
-  async storeOutboxMessage({ outbox_message, transaction }) {
+  async store_outbox_message({ outbox_message, transaction }) {
     const payload = {
       message_id: outbox_message.getId(),
       type: outbox_message.getType(),

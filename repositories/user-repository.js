@@ -1,6 +1,6 @@
 const { BadRequest } = require("../libs/error");
 const BaseRepository = require("./base-repository");
-const { User, UserRole, UserRoleAccess, Acl } = require("../models");
+const { User, UserRole, Acl, UserRoleAccess } = require("../models");
 const { userStatus } = require("../models/user/user-status");
 
 class UserRepository extends BaseRepository {
@@ -16,10 +16,13 @@ class UserRepository extends BaseRepository {
       include: [
         {
           model: Acl,
-          as: "user_access",
           attributes: { exclude: ["id", "uuid", "created_at", "updated_at"] },
+          as: "user_access",       
+          through: {
+            attributes: []
+          }
         }
-      ],
+      ]
     }
   ];
 
