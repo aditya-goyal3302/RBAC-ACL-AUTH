@@ -9,6 +9,7 @@ class AuthRouter {
     reset_password_controller,
     change_password_controller,
     auth_middleware,
+    toggle_two_step_auth_controller
   }) {
     this.router = express.Router();
     this.login_controller = login_controller;
@@ -18,6 +19,7 @@ class AuthRouter {
     this.validate_reset_password_token_controller = validate_reset_password_token_controller;
     this.reset_password_controller = reset_password_controller;
     this.change_password_controller = change_password_controller;
+    this.toggle_two_step_auth_controller = toggle_two_step_auth_controller;
 
     this.auth_middleware = auth_middleware;
 
@@ -26,21 +28,35 @@ class AuthRouter {
 
   setup_routes = () => {
     this.router
-      .post("/login", (req, res, next) => this.login_controller.handle_request(req, res, next))
-      .post("/register", (req, res, next) => this.register_controller.handle_request(req, res, next))
-      .post("/login/verify", (req, res, next) => this.validate_two_step_auth_controller.handle_request(req, res, next))
-
-      .post("/forgot-password", (req, res, next) => this.forgot_password_controller.handle_request(req, res, next))
-      .get("/reset-password/:token", (req, res, next) =>
-        this.validate_reset_password_token_controller.handle_request(req, res, next)
+      .post("/login",
+        (req, res, next) => this.login_controller.handle_request(req, res, next)
       )
-      .post("/reset-password/:token", (req, res, next) => this.reset_password_controller.handle_request(req, res, next))
+      .post("/register",
+        (req, res, next) => this.register_controller.handle_request(req, res, next)
+      )
+      .post("/login/verify",
+        (req, res, next) => this.validate_two_step_auth_controller.handle_request(req, res, next)
+      )
 
-      .post(
+      .post("/forgot-password",
+        (req, res, next) => this.forgot_password_controller.handle_request(req, res, next)
+      )
+      .get("/reset-password/:token",
+        (req, res, next) => this.validate_reset_password_token_controller.handle_request(req, res, next)
+      )
+      .put("/reset-password/:token", (
+        req, res, next) => this.reset_password_controller.handle_request(req, res, next)
+      )
+
+      .put(
         "/change-password",
         (req, res, next) => this.auth_middleware.handle(req, res, next),
         (req, res, next) => this.change_password_controller.handle_request(req, res, next)
-      );
+      )
+
+      .put('/toggle-two-step-auth',
+        (req, res, next) => this.auth_middleware.handle(req, res, next),
+        (req, res, next) => this.toggle_two_step_auth_controller.handle_request(req, res, next))
   };
 }
 

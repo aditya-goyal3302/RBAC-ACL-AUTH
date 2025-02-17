@@ -8,4 +8,5 @@ module.exports = {
   change_password_controller: asClass(require("./change-password-controller")).scoped(),
   validate_reset_password_token_controller: asClass(require("./validate-reset-password-token-controller")).scoped(),
   validate_two_step_auth_controller: asClass(require("./validate-two-step-controller")).scoped(),
+  toggle_two_step_auth_controller: asClass(require("./toggle-two-step-auth-controller")).scoped(),
 };

@@ -12,7 +12,6 @@ class AuthMiddleware {
     try {
       const decode_token = utils.verify_token(token);
       
-      // console.log('decode_token: ', decode_token);
 
       req.body.user = decode_token;
       next();
