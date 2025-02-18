@@ -39,7 +39,7 @@ module.exports = class SendResetPasswordTokenService extends VerificationService
       options: { transaction },
     })
 
-    return
+    return { message: "Token sent successfully on registered email" }
 
   };
 };

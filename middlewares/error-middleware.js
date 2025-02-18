@@ -48,7 +48,7 @@ class ErrorMiddleware {
   };
 
   handle_error(err, req, res, next) {
-    console.error(err.message);
+    console.log("error: ", err.message);
     res.status(ErrorMiddleware.error_handler(err)).send(err.message);
   }
 

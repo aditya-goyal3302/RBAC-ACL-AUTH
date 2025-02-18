@@ -1,9 +1,9 @@
 const { InternalServerError } = require("../../libs/error");
 
 class BaseService {
-  handle = async (payload) => this._execute(payload);
+  handle = async (payload, params) => this._execute(payload, params);
 
-  _execute = async (payload) => {
+  _execute = async (payload, params) => {
     throw new InternalServerError("Method not implemented");
   };
 }

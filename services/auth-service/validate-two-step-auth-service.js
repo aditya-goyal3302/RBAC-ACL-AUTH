@@ -12,12 +12,7 @@ class ValidateTwoStepAuthService extends AuthService {
       if (!email) throw new BadRequest("Email Required");
       if (!otp) throw new BadRequest("OTP Required");
 
-      const verification = await this.validate_one_time_verification_code_service.handle({ email, otp, purpose: "login", transaction });
-
-      if (!verification) throw new BadRequest("Invalid OTP");
-
-      if (verification.user_details.status !== userStatus.ENUM.ACTIVE) throw new BadRequest("User Not Found");
-      if (verification.expires_at < new Date()) throw new BadRequest("OTP Expired");
+      await this.validate_one_time_verification_code_service.handle({ email, otp, purpose: "login", transaction })
 
       return this.gen_response_with_token(verification.user_details);
     });
